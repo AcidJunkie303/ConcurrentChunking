@@ -72,19 +72,19 @@ jobs:
         working-directory: ./src
 
       - name: "Test: ConcurrentChunking.Tests"
-        run: dotnet run --no-build --configuration Release --verbosity normal
+        run: dotnet run --no-build --configuration Release --verbosity normal --framework net10.0
         working-directory: ./src/tests/ConcurrentChunking.Tests
 
       - name: "Test: ConcurrentChunking.EntityFrameworkCore.Tests"
-        run: dotnet run --no-build --configuration Release --verbosity normal
+        run: dotnet run --no-build --configuration Release --verbosity normal --framework net10.0
         working-directory: ./src/tests/ConcurrentChunking.EntityFrameworkCore.Tests
 
       - name: "Test: ConcurrentChunking.IntegrationTests"
-        run: dotnet run --no-build --configuration Release --verbosity normal
+        run: dotnet run --no-build --configuration Release --verbosity normal --framework net10.0
         working-directory: ./src/tests/ConcurrentChunking.IntegrationTests
 
       - name: "Test: ConcurrentChunking.EntityFrameworkCore.IntegrationTests"
-        run: dotnet run --no-build --configuration Release --verbosity normal
+        run: dotnet run --no-build --configuration Release --verbosity normal --framework net10.0
         working-directory: ./src/tests/ConcurrentChunking.EntityFrameworkCore.IntegrationTests
 
       - name: Pack NuGet package
