@@ -47,7 +47,7 @@ internal sealed class OrderedChannelReader<TEntity> : IChannelReader<TEntity>
                 {
                     // Buffer out-of-order chunk
                     _logger?.LogTrace("Chunk with index {ChunkIndex} was out of order. Moving to buffer.", chunk.ChunkIndex);
-                    _pendingChunksByIndex[chunk.ChunkIndex] = chunk;
+                    AddPendingChunk(chunk);
                 }
 
                 continue;
@@ -63,7 +63,7 @@ internal sealed class OrderedChannelReader<TEntity> : IChannelReader<TEntity>
 
             // Buffer out-of-order chunk
             _logger?.LogTrace("Chunk with index {ChunkIndex} was out of order. Moving to buffer.", chunk.ChunkIndex);
-            _pendingChunksByIndex[chunk.ChunkIndex] = chunk;
+            AddPendingChunk(chunk);
         }
 
         while (_pendingChunksByIndex.Remove(expectedIndex, out var bufferedChunk))
@@ -80,5 +80,13 @@ internal sealed class OrderedChannelReader<TEntity> : IChannelReader<TEntity>
         }
 
         _logger?.LogTrace("Channel completed for ordered reader.");
+    }
+
+    private void AddPendingChunk(Chunk<TEntity> chunk)
+    {
+        if (!_pendingChunksByIndex.TryAdd(chunk.ChunkIndex, chunk))
+        {
+            throw new InvalidOperationException($"Duplicate chunk index {chunk.ChunkIndex} detected. Each chunk index must be produced exactly once.");
+        }
     }
 }

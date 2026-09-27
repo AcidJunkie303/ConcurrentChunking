@@ -274,6 +274,10 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
                             .Skip(startIndex)
                             .Take(_chunkSize);
 
+            // The synchronous path below cannot observe cancellation while it runs, so check it immediately before
+            // starting a potentially long-running synchronous enumeration.
+            cancellationToken.ThrowIfCancellationRequested();
+
             var entities = pagedQuery.SupportsToListAsync()
                 ? await pagedQuery.ToListAsync(cancellationToken)
                 : pagedQuery.ToList();
