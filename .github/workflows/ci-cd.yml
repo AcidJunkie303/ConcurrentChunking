@@ -75,21 +75,17 @@ jobs:
         run: dotnet test --no-build --configuration Release --verbosity normal
         working-directory: ./src/tests/ConcurrentChunking.Tests
 
-      - name: "Test: ConcurrentChunking.DependencyInjection.Tests"
+      - name: "Test: ConcurrentChunking.EntityFrameworkCore.Tests"
         run: dotnet test --no-build --configuration Release --verbosity normal
-        working-directory: ./src/tests/ConcurrentChunking.DependencyInjection.Tests
-
-      - name: "Test: ConcurrentChunking.Linq.Tests"
-        run: dotnet test --no-build --configuration Release --verbosity normal
-        working-directory: ./src/tests/ConcurrentChunking.Linq.Tests
+        working-directory: ./src/tests/ConcurrentChunking.EntityFrameworkCore.Tests
 
       - name: "Test: ConcurrentChunking.IntegrationTests"
         run: dotnet test --no-build --configuration Release --verbosity normal
         working-directory: ./src/tests/ConcurrentChunking.IntegrationTests
 
-      - name: "Test: ConcurrentChunking.Linq.IntegrationTests"
+      - name: "Test: ConcurrentChunking.EntityFrameworkCore.IntegrationTests"
         run: dotnet test --no-build --configuration Release --verbosity normal
-        working-directory: ./src/tests/ConcurrentChunking.Linq.IntegrationTests
+        working-directory: ./src/tests/ConcurrentChunking.EntityFrameworkCore.IntegrationTests
 
       - name: Pack NuGet package
         run: >
