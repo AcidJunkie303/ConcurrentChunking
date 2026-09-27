@@ -2,7 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 internal sealed class OrderedChannelReader<TEntity> : IChannelReader<TEntity>
 {

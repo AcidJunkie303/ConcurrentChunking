@@ -1,7 +1,7 @@
 using System.Threading.Channels;
 using Shouldly;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Tests;
+namespace ConcurrentChunking.Tests;
 
 public sealed class OrderedChannelReaderTests
 {

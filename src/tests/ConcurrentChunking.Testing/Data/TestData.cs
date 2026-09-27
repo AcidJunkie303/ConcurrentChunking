@@ -1,6 +1,6 @@
 using ConcurrentChunking.Testing.Support;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
+namespace ConcurrentChunking.Testing.Data;
 
 public abstract class TestData : IDisposable
 {

@@ -10,7 +10,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\ConcurrentChunking.Linq\ConcurrentChunking.Linq.csproj"/>
+        <ProjectReference Include="..\..\ConcurrentChunking.EntityFrameworkCore\ConcurrentChunking.EntityFrameworkCore.csproj"/>
         <ProjectReference Include="..\..\ConcurrentChunking\ConcurrentChunking.csproj"/>
         <ProjectReference Include="..\ConcurrentChunking.Testing\ConcurrentChunking.Testing.csproj"/>
     </ItemGroup>

@@ -1,6 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Linq;
+﻿using ConcurrentChunking;
+using ConcurrentChunking.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Playground.Logging;
 
 namespace Playground;
@@ -12,22 +12,23 @@ internal static class Program
     private static async Task Main()
     {
         using var consoleLoggerFactory = new ConsoleLoggerFactory();
-        await using var ctx = new SqlServerDbContext();
 
         try
         {
-            var chunks = await ctx.SimpleEntities
-                                  .AsNoTracking()
-                                  .OrderBy(a => a.Id)
-                                  .LoadChunkedAsync(
-                                       () => new SqlServerDbContext(),
-                                       chunkSize: 100_000,
-                                       maxConcurrentProducerCount: 5,
-                                       maxPrefetchCount: 5,
-                                       options: ChunkedEntityLoaderOptions.PreserveChunkOrder,
-                                       loggerFactory: consoleLoggerFactory
-                                   )
-                                  .ToListAsync();
+            var loader = new ChunkedEntityLoader<SqlServerDbContext, SimpleEntity>(
+                contextFactory: () => new SqlServerDbContext(),
+                contextDestroyer: ctx => ctx.Dispose(),
+                countProvider: (query, cancellationToken) => query.LongCountAsync(cancellationToken),
+                chunkSize: 100_000,
+                maxConcurrentProducerCount: 5,
+                maxPrefetchCount: 5,
+                sourceQueryProvider: ctx => ctx.SimpleEntities
+                                               .AsNoTracking()
+                                               .OrderBy(a => a.Id),
+                loggerFactory: consoleLoggerFactory
+            );
+
+            var chunks = await loader.LoadAsync(CancellationToken.None).ToListAsync();
 
             Console.WriteLine($"Retrieved {chunks.Count} chunks with total {chunks.Sum(a => a.Entities.Count)} entities.");
         }
@@ -64,32 +65,27 @@ internal static class Program
                                 */
     }
 
+
     private static async Task DocSample1()
     {
-        await using var ctx = new SqlServerDbContext();
+        await using var ctx = new TestDbContext();
 
         var chunks = ctx.SimpleEntities
-                        .OrderByDescending(a => a.Value2)
-                        .LoadChunkedAsync
-                         (
-                             dbContextFactory: () =>
-                             {
-                                 var db = new SqlServerDbContext();
-                                 db.Database.SetCommandTimeout(3);
-                                 return db;
-                             },
-                             chunkSize: 1_000,
-                             maxConcurrentProducerCount: 5,
-                             maxPrefetchCount: 10,
-                             options: ChunkedEntityLoaderOptions.PreserveChunkOrder,
-                             loggerFactory: null
-                         );
+                              .AsNoTracking()
+                              .OrderByDescending(e => e.Id)
+                              .LoadChunkedAsync (
+                                   dbContextFactory: () => new TestDbContext(),
+                                   dbContextDestroyer: c => c.Dispose(),
+                                   chunkSize: 100_000,
+                                   maxConcurrentProducerCount: 3,
+                                   maxPrefetchCount: 5,
+                                   options: ChunkedEntityLoaderOptions.PreserveChunkOrder);
 
         await foreach (var chunk in chunks)
         {
             foreach (var entity in chunk.Entities)
             {
-                // do something here
+                Console.WriteLine($"Entity ID: {entity.Id}");
             }
         }
     }

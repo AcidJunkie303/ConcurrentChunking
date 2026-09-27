@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Linq;
+namespace ConcurrentChunking.EntityFrameworkCore;
 
 internal static class QueryExpressionChecker
 {

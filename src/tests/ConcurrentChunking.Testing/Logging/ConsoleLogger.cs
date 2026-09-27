@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Logging;
+namespace ConcurrentChunking.Testing.Logging;
 
 public class ConsoleLogger : ILogger
 {

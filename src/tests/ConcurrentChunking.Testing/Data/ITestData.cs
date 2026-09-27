@@ -1,4 +1,4 @@
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
+namespace ConcurrentChunking.Testing.Data;
 
 public interface ITestData
 {
@@ -6,11 +6,10 @@ public interface ITestData
     static abstract int ChunkSize { get; }
 }
 
-public interface ITestData<TDbContext> : ITestData
-    where TDbContext : DbContext
+public interface ITestData<out TDbContext> : ITestData
+    where TDbContext : class
 {
     public static abstract ITestData<TDbContext> Instance { get; }
     Task EnsureInitializedAsync();
-    IDbContextFactory<TDbContext> GetDbContextFactory();
     TDbContext CreateDbContext();
 }

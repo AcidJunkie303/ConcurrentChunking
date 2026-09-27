@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 /// <summary>
 ///     Represents a chunk of entities with an associated index. Used for concurrent chunking operations.

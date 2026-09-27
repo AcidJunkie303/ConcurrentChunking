@@ -1,4 +1,4 @@
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 /// <summary>
 ///     Defines an interface for loading entities in chunks asynchronously.

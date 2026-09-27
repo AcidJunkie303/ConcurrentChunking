@@ -6,6 +6,7 @@
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <PackageId>EntityFrameworkCore.ConcurrentChunking.Linq</PackageId>
         <Product>EntityFrameworkCore.ConcurrentChunking.Linq</Product>
+        <NoWarn>$(NoWarn);RCS1093</NoWarn> <!-- TODO: remove RCS1093 again -->
         <Description>
             Allows parallel and pre-emptive loading of entities in a chunk-wise manner, resulting in much faster data access over time. This package provides LINQ extension methods for the ConcurrentChunking library.
         </Description>
@@ -14,6 +15,13 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ConcurrentChunking\ConcurrentChunking.csproj"/>
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
     </ItemGroup>
 
 </Project>

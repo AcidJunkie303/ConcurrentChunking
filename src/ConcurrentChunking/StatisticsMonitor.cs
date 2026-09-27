@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 [SuppressMessage("Minor Code Smell", "S1227:break statements should not be used except for switch cases")]
 internal sealed class StatisticsMonitor

@@ -1,11 +1,12 @@
 using System.Data;
 using System.Globalization;
+using ConcurrentChunking.Testing.Entities;
 using ConcurrentChunking.Testing.Support;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
+namespace ConcurrentChunking.Testing.Data;
 
 public sealed class SqlServerTestData : TestData, ITestData<SqlServerDbContext>
 {
@@ -18,8 +19,6 @@ public sealed class SqlServerTestData : TestData, ITestData<SqlServerDbContext>
     private SqlServerTestData()
     {
     }
-
-    public IDbContextFactory<SqlServerDbContext> GetDbContextFactory() => _dbContextFactory;
 
     public SqlServerDbContext CreateDbContext() => _dbContextFactory.CreateDbContext();
 

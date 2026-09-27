@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Linq;
+namespace ConcurrentChunking.EntityFrameworkCore;
 
 /// <summary>
 ///     Provides extension methods for chunked asynchronous loading of entities from a queryable source.
@@ -15,7 +16,7 @@ public static class QueryableExtensions
     ///     Loads entities in chunks asynchronously using a database context factory.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity being loaded.</typeparam>
-    /// <typeparam name="TDbContext">The type of the database context.</typeparam>
+    /// <typeparam name="TContext">The type of the database context.</typeparam>
     /// <param name="query">
     ///     The ordered queryable source of entities.
     ///     The ordering must be deterministic and use unique column(s) (single unique key or unique key combination),
@@ -23,6 +24,7 @@ public static class QueryableExtensions
     ///     It is the caller's responsibility to provide an <see cref="IOrderedQueryable{T}" /> with unique ordering.
     /// </param>
     /// <param name="dbContextFactory">The factory to create database contexts.</param>
+    /// <param name="dbContextDestroyer">The context destroyer action to clean up database contexts.</param>
     /// <param name="chunkSize">The size of each chunk.</param>
     /// <param name="maxConcurrentProducerCount">The maximum number of concurrent producers.</param>
     /// <param name="maxPrefetchCount">The maximum number of chunks to prefetch.</param>
@@ -38,10 +40,11 @@ public static class QueryableExtensions
     ///     Thrown when the query does not include an explicit <c>OrderBy</c>/
     ///     <c>OrderByDescending</c>.
     /// </exception>
-    public static IAsyncEnumerable<Chunk<TEntity>> LoadChunkedAsync<TEntity, TDbContext>
+    public static IAsyncEnumerable<Chunk<TEntity>> LoadChunkedAsync<TEntity, TContext>
     (
         this IOrderedQueryable<TEntity> query,
-        IDbContextFactory<TDbContext> dbContextFactory,
+        IDbContextFactory<TContext> dbContextFactory,
+        Action<TContext>? dbContextDestroyer,
         int chunkSize,
         int maxConcurrentProducerCount,
         int maxPrefetchCount,
@@ -50,14 +53,14 @@ public static class QueryableExtensions
         in CancellationToken cancellationToken = default
     )
         where TEntity : class
-        where TDbContext : DbContext
+        where TContext : DbContext
         =>
-            query.LoadChunkedAsync
-            (dbContextFactory.CreateDbContext,
+            query.LoadChunkedAsync(dbContextFactory.CreateDbContext,
                 chunkSize,
                 maxConcurrentProducerCount,
                 maxPrefetchCount,
                 options,
+                dbContextDestroyer,
                 loggerFactory,
                 cancellationToken
             );
@@ -78,6 +81,7 @@ public static class QueryableExtensions
     /// <param name="maxConcurrentProducerCount">The maximum number of concurrent producers.</param>
     /// <param name="maxPrefetchCount">The maximum number of chunks to prefetch.</param>
     /// <param name="options">Options for the chunked entity loader.</param>
+    /// <param name="dbContextDestroyer">The function to destroy database contexts.</param>
     /// <param name="loggerFactory">Optional logger factory.</param>
     /// <param name="cancellationToken">Token to cancel the operation.</param>
     /// <returns>An asynchronous enumerable of chunks containing entities.</returns>
@@ -97,6 +101,7 @@ public static class QueryableExtensions
         int maxConcurrentProducerCount,
         int maxPrefetchCount,
         ChunkedEntityLoaderOptions options = ChunkedEntityLoaderOptions.PreserveChunkOrder,
+        Action<TDbContext>? dbContextDestroyer = null,
         ILoggerFactory? loggerFactory = null,
         in CancellationToken cancellationToken = default
     )
@@ -104,13 +109,14 @@ public static class QueryableExtensions
         where TDbContext : DbContext
     {
         ValidateLoadChunkedArguments(query, dbContextFactory);
-        return LoadChunkedCoreAsync(query, dbContextFactory, chunkSize, maxConcurrentProducerCount, maxPrefetchCount, options, loggerFactory, cancellationToken);
+        return LoadChunkedCoreAsync(query, dbContextFactory, dbContextDestroyer, chunkSize, maxConcurrentProducerCount, maxPrefetchCount, options, loggerFactory, cancellationToken);
     }
 
     private static async IAsyncEnumerable<Chunk<TEntity>> LoadChunkedCoreAsync<TEntity, TDbContext>
     (
         IOrderedQueryable<TEntity> query,
         Func<TDbContext> dbContextFactory,
+        Action<TDbContext>? dbContextDestroyer,
         int chunkSize,
         int maxConcurrentProducerCount,
         int maxPrefetchCount,
@@ -127,7 +133,9 @@ public static class QueryableExtensions
 
         using ChunkedEntityLoader<TDbContext, TEntity> loader = new
         (
-            dbContextFactory: new DbContextFactoryForFunc<TDbContext>(dbContextFactory),
+            contextFactory: dbContextFactory,
+            contextDestroyer: dbContextDestroyer,
+            countProvider: (q, ct) => q.LongCountAsync(ct),
             chunkSize: chunkSize,
             maxConcurrentProducerCount: maxConcurrentProducerCount,
             maxPrefetchCount: maxPrefetchCount,
@@ -145,7 +153,7 @@ public static class QueryableExtensions
 
     private static void ValidateLoadChunkedArguments<TEntity, TDbContext>(IOrderedQueryable<TEntity> query, Func<TDbContext> dbContextFactory)
         where TEntity : class
-        where TDbContext : DbContext
+        where TDbContext : class
     {
         ArgumentNullException.ThrowIfNull(query);
         ArgumentNullException.ThrowIfNull(dbContextFactory);
@@ -156,8 +164,10 @@ public static class QueryableExtensions
         }
     }
 
-    private static IOrderedQueryable<TResultEntity> ApplyQueryToDbContext<TResultEntity>(DbContext dbContext, Type entityType, IOrderedQueryable<TResultEntity> sourceQuery)
+    private static IOrderedQueryable<TResultEntity> ApplyQueryToDbContext<TDbContext, TResultEntity>(TDbContext dbContext, Type entityType, IOrderedQueryable<TResultEntity> sourceQuery)
+        where TDbContext : DbContext
         where TResultEntity : class
+
     {
         var dbSetAccessor = DbSetAccessorFactory.CreateDbSetAccessor(entityType);
         var queryable = dbSetAccessor(dbContext);

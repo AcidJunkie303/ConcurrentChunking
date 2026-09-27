@@ -1,7 +1,8 @@
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Linq;
+namespace ConcurrentChunking.EntityFrameworkCore;
 
 internal static class DbSetAccessorFactory
 {

@@ -2,27 +2,30 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Threading.Channels;
+using ConcurrentChunking.Extensions;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 /// <summary>
 ///     A loader that retrieves entities from a database in chunks, allowing concurrent processing.
 /// </summary>
-/// <typeparam name="TDbContext">The type of the database context.</typeparam>
+/// <typeparam name="TContext">The type of the database context.</typeparam>
 /// <typeparam name="TEntity">The type of the entity being loaded.</typeparam>
 [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters")]
-public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoader<TEntity>
-    where TDbContext : DbContext
+public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoader<TEntity>
+    where TContext : class
     where TEntity : class
 {
     private static readonly string EntityTypeName = typeof(TEntity).Name;
-    private readonly Func<TDbContext, IOrderedQueryable<TEntity>> _sourceQueryProvider;
+    private readonly Func<TContext, IOrderedQueryable<TEntity>> _sourceQueryProvider;
+    private readonly Func<IOrderedQueryable<TEntity>, CancellationToken, Task<long>> _countProvider;
     private readonly ChunkedEntityLoaderOptions _options;
-    private readonly ILogger<ChunkedEntityLoader<TDbContext, TEntity>>? _logger;
+    private readonly ILogger<ChunkedEntityLoader<TContext, TEntity>>? _logger;
     private readonly ILoggerFactory? _loggerFactory;
+    private readonly Action<TContext>? _contextDestroyer;
     private readonly Channel<Chunk<TEntity>> _channel;
-    private readonly Func<TDbContext> _dbContextFactory;
+    private readonly Func<TContext> _contextFactory;
     private readonly SemaphoreSlim _producerLimiterSemaphore;
     private readonly SemaphoreSlim _prefetchLimiterSemaphore;
     private readonly int _maxConcurrentProducerCount;
@@ -41,61 +44,10 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
     internal StatisticsMonitor? StatisticsMonitor { get; set; }
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="ChunkedEntityLoader{TDbContext, TEntity}" /> class using an
-    ///     <see cref="IDbContextFactory{TDbContext}" />.
-    /// </summary>
-    /// <param name="dbContextFactory">Factory to create database contexts.</param>
-    /// <param name="chunkSize">The size of each chunk. Must be at least 1.</param>
-    /// <param name="maxConcurrentProducerCount">Maximum number of concurrent producers. Must be at least 1.</param>
-    /// <param name="maxPrefetchCount">Maximum number of chunks to prefetch. Must be at least 1.</param>
-    /// <param name="sourceQueryProvider">
-    ///     Function to provide the ordered query for retrieving entities.
-    ///     The ordering must be deterministic and use unique column(s) (single unique key or unique key combination)
-    ///     because chunking relies on <c>Skip</c>/<c>Take</c> pagination.
-    ///     It is the caller's responsibility to ensure the ordering includes unique columns.
-    /// </param>
-    /// <param name="options">Loader options.</param>
-    /// <param name="loggerFactory">Optional logger factory.</param>
-    /// <param name="logger">Optional logger.</param>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="dbContextFactory" /> or
-    ///     <paramref name="sourceQueryProvider" /> is <see langword="null" />.
-    /// </exception>
-    /// <exception cref="ArgumentOutOfRangeException">
-    ///     Thrown when <paramref name="chunkSize" />,
-    ///     <paramref name="maxConcurrentProducerCount" />, or <paramref name="maxPrefetchCount" /> is less than 1.
-    /// </exception>
-    [SuppressMessage("Critical Code Smell", "S2360:Optional parameters should not be used")]
-    public ChunkedEntityLoader
-    (
-        IDbContextFactory<TDbContext> dbContextFactory,
-        int chunkSize,
-        int maxConcurrentProducerCount,
-        int maxPrefetchCount,
-        Func<TDbContext, IOrderedQueryable<TEntity>> sourceQueryProvider,
-        ChunkedEntityLoaderOptions options = ChunkedEntityLoaderOptions.PreserveChunkOrder,
-        ILoggerFactory? loggerFactory = null,
-        ILogger<ChunkedEntityLoader<TDbContext, TEntity>>? logger = null
-    )
-        : this
-        (
-            dbContextFactory.CreateDbContext,
-            chunkSize,
-            maxConcurrentProducerCount,
-            maxPrefetchCount,
-            sourceQueryProvider,
-            options,
-            loggerFactory,
-            logger
-        )
-    {
-    }
-
-    /// <summary>
     ///     Initializes a new instance of the <see cref="ChunkedEntityLoader{TDbContext, TEntity}" /> class using a function to
     ///     create database contexts.
     /// </summary>
-    /// <param name="dbContextFactory">Function to create database contexts.</param>
+    /// <param name="contextFactory">Function to create database contexts.</param>
     /// <param name="chunkSize">The size of each chunk. Must be at least 1.</param>
     /// <param name="maxConcurrentProducerCount">Maximum number of concurrent producers. Must be at least 1.</param>
     /// <param name="maxPrefetchCount">Maximum number of chunks to prefetch. Must be at least 1.</param>
@@ -105,11 +57,16 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
     ///     because chunking relies on <c>Skip</c>/<c>Take</c> pagination.
     ///     It is the caller's responsibility to ensure the ordering includes unique columns.
     /// </param>
+    /// <param name="countProvider">Function to provide the count of entities.</param>
     /// <param name="options">Loader options.</param>
     /// <param name="loggerFactory">Optional logger factory.</param>
+    /// <param name="contextDestroyer">
+    ///     Optional context destroyer. Used for controlled destruction of the context ; e.g.
+    ///     disposal.
+    /// </param>
     /// <param name="logger">Optional logger.</param>
     /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="dbContextFactory" /> or
+    ///     Thrown when <paramref name="contextFactory" /> or
     ///     <paramref name="sourceQueryProvider" /> is <see langword="null" />.
     /// </exception>
     /// <exception cref="ArgumentOutOfRangeException">
@@ -119,27 +76,31 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
     [SuppressMessage("Critical Code Smell", "S2360:Optional parameters should not be used")]
     public ChunkedEntityLoader
     (
-        Func<TDbContext> dbContextFactory,
+        Func<TContext> contextFactory,
         int chunkSize,
         int maxConcurrentProducerCount,
         int maxPrefetchCount,
-        Func<TDbContext, IOrderedQueryable<TEntity>> sourceQueryProvider,
+        Func<TContext, IOrderedQueryable<TEntity>> sourceQueryProvider,
+        Func<IOrderedQueryable<TEntity>, CancellationToken, Task<long>> countProvider,
         ChunkedEntityLoaderOptions options = ChunkedEntityLoaderOptions.PreserveChunkOrder,
         ILoggerFactory? loggerFactory = null,
-        ILogger<ChunkedEntityLoader<TDbContext, TEntity>>? logger = null
+        Action<TContext>? contextDestroyer = null,
+        ILogger<ChunkedEntityLoader<TContext, TEntity>>? logger = null
     )
     {
-        ArgumentNullException.ThrowIfNull(dbContextFactory);
+        ArgumentNullException.ThrowIfNull(contextFactory);
         ArgumentOutOfRangeException.ThrowIfLessThan(chunkSize, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxConcurrentProducerCount, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxPrefetchCount, 1);
         ArgumentNullException.ThrowIfNull(sourceQueryProvider);
 
         _sourceQueryProvider = sourceQueryProvider;
+        _countProvider = countProvider;
         _loggerFactory = loggerFactory;
+        _contextDestroyer = contextDestroyer;
         _options = options;
         _logger = logger;
-        _dbContextFactory = dbContextFactory;
+        _contextFactory = contextFactory;
         _chunkSize = chunkSize;
 
         var finalMaxConcurrentProducerCount = Math.Min(maxConcurrentProducerCount, maxPrefetchCount);
@@ -290,7 +251,8 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
     {
         try
         {
-            await using var context = _dbContextFactory();
+            var context = _contextFactory();
+            using var contextDestroyer = CreateContextDestroyer(context);
             var query = _sourceQueryProvider(context);
             var startIndex = checked(chunkIndex * _chunkSize);
 
@@ -303,10 +265,13 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
                 await ChunkProductionStarted.Invoke(chunkIndex);
             }
 
-            var entities = await query
-                                .Skip(startIndex)
-                                .Take(_chunkSize)
-                                .ToListAsync(cancellationToken);
+            var pagedQuery = query
+                            .Skip(startIndex)
+                            .Take(_chunkSize);
+
+            var entities = pagedQuery.SupportsToListAsync()
+                ? await pagedQuery.ToListAsync(cancellationToken)
+                : pagedQuery.ToList();
 
             _logger?.LogTrace("Produced chunk #{ChunkIndex} with StartIndex={StartIndex} for EntityTypeName={EntityTypeName} with {EntityCount} entities in {DurationInMs} ms.", chunkIndex, startIndex, EntityTypeName, entities.Count, (int) Stopwatch.GetElapsedTime(startedTimestamp).TotalMilliseconds);
 
@@ -335,10 +300,12 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
 
     private async Task<long> GetExpectedEntityCountAsync(CancellationToken cancellationToken)
     {
-        await using var context = _dbContextFactory();
+        var context = _contextFactory();
+        using var contextDestroyer = CreateContextDestroyer(context);
 
         _logger?.LogTrace("Getting total expected entity count for EntityTypeName={EntityTypeName}", EntityTypeName);
-        var count = await _sourceQueryProvider(context).LongCountAsync(cancellationToken);
+
+        var count = await _countProvider(_sourceQueryProvider(context), cancellationToken);
         _logger?.LogTrace("Expected entity count for EntityTypeName={EntityTypeName} is {EntityCount}.", EntityTypeName, count);
 
         return count;
@@ -365,5 +332,35 @@ public sealed class ChunkedEntityLoader<TDbContext, TEntity> : IChunkedEntityLoa
         }
 
         return (int) chunkCountLong;
+    }
+
+    private IDisposable CreateContextDestroyer(TContext context)
+        => _contextDestroyer is null
+            ? NilDisposable.Instance
+            : new ContextDestroyer(context, _contextDestroyer);
+
+    private sealed class ContextDestroyer : IDisposable
+    {
+        private readonly TContext _context;
+        private readonly Action<TContext> _destroyer;
+        private bool _disposed;
+
+        public ContextDestroyer(TContext context, Action<TContext> destroyer)
+        {
+            _context = context;
+            _destroyer = destroyer;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _destroyer.Invoke(_context);
+
+            _disposed = true;
+        }
     }
 }

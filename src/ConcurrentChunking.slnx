@@ -11,16 +11,14 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="tests\ConcurrentChunking.DependencyInjection.Tests\ConcurrentChunking.DependencyInjection.Tests.csproj" Type="C#" />
-    <Project Path="tests\ConcurrentChunking.IntegrationTests\ConcurrentChunking.IntegrationTests.csproj" Type="C#" />
-    <Project Path="tests\ConcurrentChunking.Linq.IntegrationTests\ConcurrentChunking.Linq.IntegrationTests.csproj" Type="C#" />
-    <Project Path="tests\ConcurrentChunking.Linq.Tests\ConcurrentChunking.Linq.Tests.csproj" Type="C#" />
-    <Project Path="tests\ConcurrentChunking.Testing\ConcurrentChunking.Testing.csproj" Type="C#" />
-    <Project Path="tests\ConcurrentChunking.Tests\ConcurrentChunking.Tests.csproj" Type="C#" />
+    <Project Path="tests/ConcurrentChunking.EntityFrameworkCore.IntegrationTests/ConcurrentChunking.EntityFrameworkCore.IntegrationTests.csproj" />
+    <Project Path="tests/ConcurrentChunking.EntityFrameworkCore.Tests/ConcurrentChunking.EntityFrameworkCore.Tests.csproj" />
+    <Project Path="tests\ConcurrentChunking.IntegrationTests\ConcurrentChunking.IntegrationTests.csproj" />
+    <Project Path="tests\ConcurrentChunking.Testing\ConcurrentChunking.Testing.csproj" />
+    <Project Path="tests\ConcurrentChunking.Tests\ConcurrentChunking.Tests.csproj" />
   </Folder>
-  <Project Path="ConcurrentChunking.DependencyInjection\ConcurrentChunking.DependencyInjection.csproj" Type="C#" />
-  <Project Path="ConcurrentChunking.Linq\ConcurrentChunking.Linq.csproj" Type="C#" />
-  <Project Path="ConcurrentChunking\ConcurrentChunking.csproj" Type="C#" />
-  <Project Path="PlaygroundWithNugetPackage\PlaygroundWithNugetPackage.csproj" Type="C#" />
-  <Project Path="Playground\Playground.csproj" Type="C#" />
+  <Project Path="ConcurrentChunking.EntityFrameworkCore/ConcurrentChunking.EntityFrameworkCore.csproj" />
+  <Project Path="ConcurrentChunking\ConcurrentChunking.csproj" />
+  <Project Path="PlaygroundWithNugetPackage\PlaygroundWithNugetPackage.csproj" />
+  <Project Path="Playground\Playground.csproj" />
 </Solution>

@@ -1,4 +1,6 @@
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace ConcurrentChunking.Testing.Entities;
 
 public sealed class InMemoryDbContext : DbContext, IDbContext
 {

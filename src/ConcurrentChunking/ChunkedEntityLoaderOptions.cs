@@ -1,4 +1,4 @@
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking;
+namespace ConcurrentChunking;
 
 /// <summary>
 ///     Provides behavioral options for the <see cref="ChunkedEntityLoader{TDbContext,TEntity}" />.

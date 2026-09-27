@@ -1,13 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+﻿using ConcurrentChunking.Testing.Data;
+using ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace ConcurrentChunking.Testing;
 
-public abstract partial class OrderedQueryableExtensionsTestBase<TDbContext, TTestData> : TestBase
-    where TDbContext : DbContext, IDbContext, new()
-    where TTestData : ITestData<TDbContext>, ITestData
+public abstract partial class OrderedQueryableExtensionsTestBase<TContext, TTestData> : TestBase
+    where TContext : DbContext, IDbContext, new()
+    where TTestData : ITestData<TContext>, ITestData
 {
     private static int EntityCount => TTestData.EntityCount;
 

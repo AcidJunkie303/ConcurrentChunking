@@ -1,7 +1,7 @@
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
+using ConcurrentChunking.Testing.Data;
 using Xunit;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Fixtures;
+namespace ConcurrentChunking.Testing.Fixtures;
 
 public sealed class UnitTestStartupFixture : IAsyncLifetime
 {

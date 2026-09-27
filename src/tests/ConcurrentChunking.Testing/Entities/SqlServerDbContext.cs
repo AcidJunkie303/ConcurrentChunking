@@ -1,6 +1,7 @@
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Containers;
+using ConcurrentChunking.Testing.Containers;
+using Microsoft.EntityFrameworkCore;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+namespace ConcurrentChunking.Testing.Entities;
 
 public sealed class SqlServerDbContext : DbContext, IDbContext
 {

@@ -1,8 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
+using ConcurrentChunking.Testing.Entities;
 using ConcurrentChunking.Testing.Support;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
+namespace ConcurrentChunking.Testing.Data;
 
 [SuppressMessage("Performance", "MA0158:Use System.Threading.Lock", Justification = "We support also .NET8.0 and .NET9.0 that lack the Lock type")]
 public sealed class InMemoryTestData : TestData, ITestData<InMemoryDbContext>
@@ -16,8 +17,6 @@ public sealed class InMemoryTestData : TestData, ITestData<InMemoryDbContext>
     private InMemoryTestData()
     {
     }
-
-    public IDbContextFactory<InMemoryDbContext> GetDbContextFactory() => _dbContextFactory;
 
     public InMemoryDbContext CreateDbContext() => _dbContextFactory.CreateDbContext();
 

@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using Xunit;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Logging;
+namespace ConcurrentChunking.Testing.Logging;
 
 public sealed class XunitLoggerFactory : ILoggerFactory
 {

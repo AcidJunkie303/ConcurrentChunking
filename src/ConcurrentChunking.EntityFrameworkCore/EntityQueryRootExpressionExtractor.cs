@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore.Query;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Linq;
+namespace ConcurrentChunking.EntityFrameworkCore;
 
 internal static class EntityQueryRootExpressionExtractor
 {

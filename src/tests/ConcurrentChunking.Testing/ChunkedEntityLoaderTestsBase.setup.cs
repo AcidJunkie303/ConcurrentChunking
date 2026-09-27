@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+﻿using ConcurrentChunking.Testing.Data;
+using ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace ConcurrentChunking.Testing;
@@ -31,11 +30,13 @@ public abstract partial class ChunkedEntityLoaderTestBase<TDbContext, TTestData>
     )
     {
         return new ChunkedEntityLoader<TDbContext, SimpleEntity>(
-            dbContextFactory: () => new TDbContext(),
+            contextFactory: () => new TDbContext(),
+            contextDestroyer: ctx => ctx.Dispose(),
             chunkSize: chunkSize,
             maxConcurrentProducerCount: maxConcurrentProducerCount,
             maxPrefetchCount: maxPrefetchCount,
             sourceQueryProvider: ctx => ctx.SimpleEntities.AsNoTracking().OrderBy(e => e.Id),
+            countProvider: (query, cancellationToken) => query.LongCountAsync(cancellationToken),
             options: options,
             loggerFactory: LoggerFactory,
             logger: LoggerFactory.CreateLogger<ChunkedEntityLoader<TDbContext, SimpleEntity>>()

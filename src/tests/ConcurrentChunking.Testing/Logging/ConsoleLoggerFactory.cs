@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Logging;
+namespace ConcurrentChunking.Testing.Logging;
 
 [SuppressMessage("Performance", "CA1822:Mark members as static")]
 [SuppressMessage("Minor Code Smell", "S2325:Methods and properties that don\'t access instance data should be static")]

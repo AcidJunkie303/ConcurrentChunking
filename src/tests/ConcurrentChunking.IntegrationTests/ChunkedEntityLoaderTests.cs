@@ -1,6 +1,6 @@
 ﻿using ConcurrentChunking.Testing;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using ConcurrentChunking.Testing.Data;
+using ConcurrentChunking.Testing.Entities;
 
 namespace ConcurrentChunking.IntegrationTests;
 

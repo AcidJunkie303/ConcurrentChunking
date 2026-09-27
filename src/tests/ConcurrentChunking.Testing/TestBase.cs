@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Logging;
+using ConcurrentChunking.Testing.Logging;
 using Xunit;
 
 namespace ConcurrentChunking.Testing;

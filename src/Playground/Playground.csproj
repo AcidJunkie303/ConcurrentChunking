@@ -6,16 +6,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="System.Linq.Async" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+        <PackageReference Include="System.Linq.Async"/>
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ConcurrentChunking.DependencyInjection\ConcurrentChunking.DependencyInjection.csproj"/>
-        <ProjectReference Include="..\ConcurrentChunking.Linq\ConcurrentChunking.Linq.csproj"/>
+        <ProjectReference Include="..\ConcurrentChunking.EntityFrameworkCore\ConcurrentChunking.EntityFrameworkCore.csproj"/>
         <ProjectReference Include="..\ConcurrentChunking\ConcurrentChunking.csproj"/>
     </ItemGroup>
 

@@ -1,8 +1,8 @@
 ﻿using ConcurrentChunking.Testing;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Data;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using ConcurrentChunking.Testing.Data;
+using ConcurrentChunking.Testing.Entities;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Tests;
+namespace ConcurrentChunking.Tests;
 
 public sealed class ChunkedEntityLoaderTests : ChunkedEntityLoaderTestBase<InMemoryDbContext, InMemoryTestData>
 {

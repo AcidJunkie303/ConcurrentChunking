@@ -1,10 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
+using ConcurrentChunking.Testing.Entities;
 using DotNet.Testcontainers.Builders;
-using Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Entities;
+using Microsoft.EntityFrameworkCore;
 using Testcontainers.MsSql;
 using Xunit;
 
-namespace Microsoft.EntityFrameworkCore.ConcurrentChunking.Testing.Containers;
+namespace ConcurrentChunking.Testing.Containers;
 
 [SuppressMessage("ReSharper", "StaticMemberInGenericType")]
 [SuppressMessage("Major Code Smell", "S2743:Static fields should not be used in generic types")]
