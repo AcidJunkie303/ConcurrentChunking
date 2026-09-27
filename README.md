@@ -1,10 +1,9 @@
 # ConcurrentChunking
 
-`ConcurrentChunking` helps load large EF Core queries in **parallel chunks** with optional prefetching.
+`ConcurrentChunking` helps load large result sets based on `IQueryable<T>` in **parallel chunks** with optional prefetching.
 
 It is useful when a single large query takes too long to materialize before processing can begin, especially for
 workloads like:
-
 - data migration
 - reporting/export pipelines
 - batch processing and background jobs
@@ -34,6 +33,7 @@ dotnet add package ConcurrentChunking.EntityFrameworkCore
 ## Quick start
 
 ### 1) Core loader (`ChunkedEntityLoader<TDbContext, TEntity>`)
+The following example loads `SimpleEntity` in chunks of 100,000 rows from a entity framework core `DbContext`.
 
 ```csharp
 using ConcurrentChunking;
@@ -95,19 +95,19 @@ await foreach (var chunk in chunks)
 - `maxPrefetchCount`: limits queued chunk count and therefore memory pressure.
 - `PreserveChunkOrder`: keeps output ordered by chunk index; disable if out-of-order consumption is acceptable.
 
-Start conservatively, measure DB pressure and memory usage, then increase settings and measure again.
+Start conservatively, measure DB and memory usage, then increase settings and measure again.
 
 ## Notes and caveats
 
 - Always use deterministic ordering in source queries.
 - Consider `AsNoTracking()` for read-only workloads.
 - The context factory (`contextFactory` parameter) and context destroyer (`contextDestroyer`) gives you control about
-  shared contexts and their destruction. If you use a shared context, be aware of potential concurrency issues and
+  the lifetime of a context. If you use a shared context, be aware of potential concurrency issues and
   ensure proper disposal.
 
 ## Build and test
 
-From `src`:
+From `src` directory:
 
 ```powershell
 dotnet restore
@@ -118,4 +118,3 @@ dotnet test -c Release
 ## License
 
 MIT. See `LICENSE.txt`.
-
