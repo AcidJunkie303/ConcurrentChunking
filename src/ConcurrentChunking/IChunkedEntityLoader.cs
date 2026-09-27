@@ -19,5 +19,9 @@ public interface IChunkedEntityLoader<TEntity> : IDisposable
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>An asynchronous enumerable of chunks containing entities.</returns>
     /// <exception cref="InvalidOperationException">Thrown when this method is called more than once on the same instance.</exception>
+    /// <remarks>
+    ///     A loader is single-use. Dispose it after enumeration has completed or has been disposed; do not dispose it
+    ///     while a load operation is still running.
+    /// </remarks>
     IAsyncEnumerable<Chunk<TEntity>> LoadAsync(CancellationToken cancellationToken);
 }

@@ -101,9 +101,16 @@ Start conservatively, measure DB and memory usage, then increase settings and me
 
 - Always use deterministic ordering in source queries.
 - Consider `AsNoTracking()` for read-only workloads.
-- The context factory (`contextFactory` parameter) and context destroyer (`contextDestroyer`) gives you control about
-  the lifetime of a context. If you use a shared context, be aware of potential concurrency issues and
-  ensure proper disposal.
+- The context factory (`contextFactory` parameter) and context destroyer (`contextDestroyer` parameter) control context lifetime.
+  Neither the core loader nor the Entity Framework Core extensions dispose contexts on your behalf; `contextDestroyer` is
+  never defaulted. If your context is disposable, pass a destroyer (e.g. `ctx => ctx.Dispose()`) to avoid leaking it.
+  This also means you remain in control if you intentionally share one long-lived context across chunks (e.g. with
+  `maxConcurrentProducerCount: 1`), where per-chunk disposal would be wrong.
+- Loading uses `LongCount` followed by `Skip`/`Take` queries. If the underlying data changes during loading, rows can be
+  duplicated or missed. Use an appropriate transaction/isolation level for a consistent snapshot, or use a stable key-range
+  pagination strategy for highly mutable or very large tables.
+- A loader is single-use. Dispose it after the asynchronous enumeration completes (or after the enumerator is disposed);
+  do not dispose it while producers are still running.
 
 ## Build and test
 
@@ -112,7 +119,10 @@ From `src` directory:
 ```powershell
 dotnet restore
 dotnet build -c Release
-dotnet test -c Release
+dotnet run --project tests/ConcurrentChunking.Tests -c Release --framework net10.0
+dotnet run --project tests/ConcurrentChunking.EntityFrameworkCore.Tests -c Release --framework net10.0
+dotnet run --project tests/ConcurrentChunking.IntegrationTests -c Release --framework net10.0
+dotnet run --project tests/ConcurrentChunking.EntityFrameworkCore.IntegrationTests -c Release --framework net10.0
 ```
 
 ## License

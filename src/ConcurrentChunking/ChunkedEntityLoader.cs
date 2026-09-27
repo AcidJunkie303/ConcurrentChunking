@@ -93,6 +93,7 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
         ArgumentOutOfRangeException.ThrowIfLessThan(maxConcurrentProducerCount, 1);
         ArgumentOutOfRangeException.ThrowIfLessThan(maxPrefetchCount, 1);
         ArgumentNullException.ThrowIfNull(sourceQueryProvider);
+        ArgumentNullException.ThrowIfNull(countProvider);
 
         _sourceQueryProvider = sourceQueryProvider;
         _countProvider = countProvider;
@@ -163,6 +164,10 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
     /// <summary>
     ///     Disposes resources used by the loader.
     /// </summary>
+    /// <remarks>
+    ///     The loader is single-use and should be disposed after its asynchronous enumeration has completed or has
+    ///     been disposed. Disposing while loading is active is not supported.
+    /// </remarks>
     public void Dispose()
     {
         _producerLimiterSemaphore.Dispose();
@@ -172,7 +177,7 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
     private static async Task RemoveCompletedTasksIfNecessaryAsync(List<Task> tasks, int maxConcurrentProducerCount, bool force)
     {
         // we only clean-up when forced or when we have a certain amount of tasks in the list
-        var shouldCleanUp = tasks.Count >= maxConcurrentProducerCount * 2;
+        var shouldCleanUp = tasks.Count >= maxConcurrentProducerCount;
         if (!(shouldCleanUp || force))
         {
             return;
@@ -203,7 +208,7 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
             _logger?.LogTrace("Starting chunked entity loader for EntityTypeName={EntityTypeName} with ChunkSize={ChunkSize}, MaxConcurrentProducerCount={MaxConcurrentProducerCount}, MaxPrefetchCount={MaxPrefetchCount}, ExpectedEntityCount={ExpectedEntityCount}, ChunkCount={ChunkCount}.",
                 EntityTypeName, _chunkSize, _producerLimiterSemaphore.CurrentCount, _prefetchLimiterSemaphore.CurrentCount, entityCount, chunkCount);
 
-            var tasks = new List<Task>(_maxConcurrentProducerCount * 3);
+            var tasks = new List<Task>(_maxConcurrentProducerCount);
 
             for (var i = 0; i < chunkCount && !HasErrors; i++)
             {
@@ -313,6 +318,11 @@ public sealed class ChunkedEntityLoader<TContext, TEntity> : IChunkedEntityLoade
 
     private int CalculateChunkCount(long entityCount)
     {
+        if (entityCount < 0)
+        {
+            throw new InvalidOperationException($"The count provider returned an invalid negative entity count ({entityCount}).");
+        }
+
         var chunkCountLong = (entityCount / _chunkSize) + (entityCount % _chunkSize > 0 ? 1 : 0);
 
         if (chunkCountLong > int.MaxValue)
