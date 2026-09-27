@@ -55,16 +55,15 @@
         <Nullable>enable</Nullable>
         <PackageIcon>icon.png</PackageIcon>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/AcidJunkie303/Microsoft.EntityFrameworkCore.ConcurrentChunking</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/AcidJunkie303/ConcurrentChunking</PackageProjectUrl>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <PackageTags>entity framework chunking</PackageTags>
         <RepositoryType>GitHub</RepositoryType>
-        <RepositoryUrl>https://github.com/AcidJunkie303/Microsoft.EntityFrameworkCore.ConcurrentChunking</RepositoryUrl>
+        <RepositoryUrl>https://github.com/AcidJunkie303/ConcurrentChunking</RepositoryUrl>
         <SignAssembly>false</SignAssembly>
         <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <WarningLevel>9999</WarningLevel>
-        <RootNamespace>Microsoft.EntityFrameworkCore.$(ProjectName)</RootNamespace>
     </PropertyGroup>
 
     <!-- Unit testing -->
