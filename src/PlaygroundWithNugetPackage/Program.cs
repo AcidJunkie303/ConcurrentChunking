@@ -1,4 +1,5 @@
-﻿using PlaygroundWithNugetPackage.Logging;
+﻿using ConcurrentChunking.EntityFrameworkCore;
+using PlaygroundWithNugetPackage.Logging;
 
 namespace PlaygroundWithNugetPackage;
 
@@ -11,22 +12,11 @@ internal static class Program
         using var consoleLoggerFactory = new ConsoleLoggerFactory();
         await using var ctx = new SqlServerDbContext();
 
-        // TODO: make it work again
-#pragma warning disable S125
-        /*
-        var loader = new ChunkedEntityLoader<SqlServerDbContext, SimpleEntity>(
-            dbContextFactory: () => new SqlServerDbContext(),
-            chunkSize: 100_000,
-            maxConcurrentProducerCount: 5,
-            maxPrefetchCount: 5,
-            loggerFactory: consoleLoggerFactory
-        );
-
-
         var chunks = await ctx.SimpleEntities
                               .OrderBy(a => a.Id)
                               .LoadChunkedAsync(
                                    () => new SqlServerDbContext(),
+                                   dbContextDestroyer: c => c.Dispose(),
                                    chunkSize: 100_000,
                                    maxConcurrentProducerCount: 5,
                                    maxPrefetchCount: 5,
@@ -35,6 +25,5 @@ internal static class Program
                               .ToListAsync();
 
         Console.WriteLine($"Retrieved {chunks.Count} chunks with total {chunks.Sum(a => a.Entities.Count)} entities.");
-        */
     }
 }

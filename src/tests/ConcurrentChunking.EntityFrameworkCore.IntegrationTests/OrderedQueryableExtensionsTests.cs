@@ -2,7 +2,7 @@
 using ConcurrentChunking.Testing.Data;
 using ConcurrentChunking.Testing.Entities;
 
-namespace ConcurrentChunking.Linq.IntegrationTests;
+namespace ConcurrentChunking.EntityFrameworkCore.IntegrationTests;
 
 public sealed class OrderedQueryableExtensionsTests : OrderedQueryableExtensionsTestBase<SqlServerDbContext, SqlServerTestData>
 {

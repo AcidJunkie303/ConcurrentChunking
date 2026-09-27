@@ -4,9 +4,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageVersion Include="EntityFrameworkCore.ConcurrentChunking" Version="1.0.0.47"/>
-        <PackageVersion Include="EntityFrameworkCore.ConcurrentChunking.DependencyInjection" Version="1.0.0.47"/>
-        <PackageVersion Include="EntityFrameworkCore.ConcurrentChunking.Linq" Version="1.0.0.47"/>
+        <PackageVersion Include="ConcurrentChunking" Version="2.0.0-prerelease.72"/>
+        <PackageVersion Include="ConcurrentChunking.EntityFrameworkCore" Version="2.0.0-prerelease.72"/>
         <PackageVersion Include="JunitXml.TestLogger" Version="8.0.0"/>
         <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="[8.0.0,999.999.999]"/>
         <PackageVersion Include="Microsoft.EntityFrameworkCore.Abstractions" Version="[8.0.0,999.999.999]"/>

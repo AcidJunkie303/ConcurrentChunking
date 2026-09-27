@@ -6,9 +6,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="EntityFrameworkCore.ConcurrentChunking"/>
-        <PackageReference Include="EntityFrameworkCore.ConcurrentChunking.DependencyInjection"/>
-        <PackageReference Include="EntityFrameworkCore.ConcurrentChunking.Linq"/>
+        <PackageReference Include="ConcurrentChunking"/>
+        <PackageReference Include="ConcurrentChunking.EntityFrameworkCore"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory"/>
